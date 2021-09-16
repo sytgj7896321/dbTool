@@ -2,39 +2,37 @@ package relation
 
 import (
 	"database/sql"
-	"dbTool/cmd"
 	"dbTool/myformat"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 )
 
-func (m *MyDB) Do(modifySql, querySql, dbType string) {
-	modify := strings.Split(modifySql, " ")
-	query := strings.Split(querySql, " ")
-	if modifySql != "" && querySql != "" {
-		fmt.Println("Please use --modify or --query, not both")
-		return
-	} else if modifySql != "" && strings.ToUpper(modify[0]) != "SELECT" {
-		m.Exec(modifySql, cmd.SQLParams...)
-	} else if querySql != "" && strings.ToUpper(query[0]) == "SELECT" {
-		switch cmd.Output {
-		case "standard":
-			fmt.Println("Standard")
-			//m.Query(querySql)
+func (m *MyDB) Do(sql, outputType string, params []interface{}) {
+	sqlType := strings.ToUpper(strings.Split(sql, " ")[0])
+	if sqlType == "SELECT" {
+		switch outputType {
+		case "normal":
+			m.Query(sql, params...)
 		case "json":
-			m.QueryJson(querySql)
+			fmt.Println("In plan")
+			os.Exit(0)
+		case "csv":
+			fmt.Println("In plan")
+			os.Exit(0)
 		default:
-			fmt.Println("Unknown output type")
-			return
+			fmt.Println("Unknown Output Type")
+			os.Exit(1)
 		}
 	} else {
-		fmt.Println("Wrong usage, please use 'dbTool " + dbType + " -h' for more information")
-		return
+		m.Exec(sql, sqlType, params...)
 	}
 }
 
-func (m *MyDB) Exec(sqlString string, args ...interface{}) {
+func (m *MyDB) Exec(sqlString, sqlType string, args ...interface{}) {
+	start := time.Now()
 	tx, err := m.DB.Begin()
 	myformat.Error(err, "Begin Transaction")
 	stmt, err := tx.Prepare(sqlString)
@@ -54,42 +52,52 @@ func (m *MyDB) Exec(sqlString string, args ...interface{}) {
 		argsStr = argsStr + arg.(string) + " "
 	}
 	argsStr = strings.TrimRight(argsStr, " ")
-	fmt.Println("Exec SQL: " + sqlString + " with SQL params: \"" + argsStr + "\" Success")
-	fmt.Printf("LastInsertID = %d, AffectedRows = %d\n", id, affected)
+	if argsStr != "" {
+		fmt.Printf("Exec SQL: %s with SQL params: [%s] Success\n", sqlString, argsStr)
+	} else {
+		fmt.Printf("Exec SQL: %s Success\n", sqlString)
+	}
+	if sqlType == "INSERT" {
+		fmt.Printf("LastInsertID = %d, AffectedRows = %d (%v)\n", id, affected, time.Since(start))
+	} else {
+		fmt.Printf("AffectedRows = %d (%v)\n", affected, time.Since(start))
+	}
 	err = tx.Commit()
 	myformat.Error(err, "Transaction Commit Failed")
 }
 
-//func (m *MyDB) Query(sqlString string) {
-//	rows, err := m.DB.Query(sqlString)
-//	defer func(rows *sql.Rows) {
-//		err := rows.Close()
-//		myformat.Error(err, "Fail to End this Query")
-//	}(rows)
-//	myformat.Error(err, "Fail to Query this SQL")
-//	columns, _ := rows.Columns()
-//	count := len(columns)
-//	//tableData := make([]map[string]interface{}, 0)
-//	values := make([]interface{}, count)
-//	//valueP := make([]interface{}, count)
-//	for rows.Next() {
-//		//for i := 0; i < count; i++ {
-//		//	valueP[i] = &values[i]
-//		//}
-//		for range columns {
-//			rows.Scan(values...)
-//			//myformat.Printf(values.([]byte))
-//		}
-//		//	err := rows.Scan()
-//		//	if err != nil {
-//		//		fmt.Println("Fail to read Query result")
-//		//	} else {
-//		//		fmt.Printf("%+v\n", )
-//		//	}
-//	}
-//}
+func (m *MyDB) Query(sqlStr string, args ...interface{}) {
+	start := time.Now()
+	stmt, err := m.DB.Prepare(sqlStr)
+	myformat.Error(err, "Please Check your SQL")
+	rows, err := stmt.Query(args...)
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		myformat.Error(err, "Close Query Failed")
+	}(rows)
+	myformat.Error(err, "Query SQL Failed")
+	cols, err := rows.Columns()
+	myformat.Error(err, "Read Columns Failed")
+	scans := make([]interface{}, len(cols))
+	colsToBeScan := make([]string, len(cols))
+	for i := range cols {
+		colsToBeScan[i] = cols[i]
+		scans[i] = &colsToBeScan[i]
+	}
+	i := 0
+	for rows.Next() {
+		err := rows.Scan(scans...)
+		myformat.Error(err, "Scan Row Data Failed")
+		i++
+		fmt.Printf("*************************** %d. row ***************************\n", i)
+		for col, v := range colsToBeScan {
+			fmt.Printf("%27s:%-27s\n", cols[col], v)
+		}
+	}
+	fmt.Printf("%d rows in set (%v)\n", i, time.Since(start))
+}
 
-func (m *MyDB) QueryJson(sqlString string) {
+func (m *MyDB) QueryJson(sqlString string, args ...interface{}) {
 	stmt, err := m.DB.Prepare(sqlString)
 	myformat.Error(err, "json")
 	defer stmt.Close()
@@ -125,31 +133,3 @@ func (m *MyDB) QueryJson(sqlString string) {
 	myformat.Error(err, "json")
 	fmt.Println(string(jsonData))
 }
-
-//func (m *MyDB) Query(sqlStr string) {
-//	rows, err := m.DB.Query(sqlStr)
-//	//函数结束释放链接
-//	defer rows.Close()
-//	//读出查询出的列字段名
-//	cols, _ := rows.Columns()
-//	//values是每个列的值，这里获取到byte里
-//	values := make([]string, len(cols))
-//	//query.Scan的参数，因为每次查询出来的列是不定长的，用len(cols)定住当次查询的长度
-//	scans := make([]interface{}, len(cols))
-//	//让每一行数据都填充到[][]byte里面,狸猫换太子
-//	for i := range values {
-//		scans[i] = &values[i]
-//	}
-//	for rows.Next() {
-//		err := rows.Scan(scans...)
-//		row := make(map[string]string, 0)
-//		for k, v := range values { //每行数据是放在values里面，现在把它挪到row里
-//			key := cols[k]
-//			row[key] = v
-//			fmt.Printf("%s:%s ", cols[k], v)
-//			if k == len(cols)-1 {
-//				fmt.Printf("\n")
-//			}
-//		}
-//	}
-//}

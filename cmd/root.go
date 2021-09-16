@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"dbTool/myformat"
 	"errors"
 	"github.com/spf13/cobra"
 	"strings"
@@ -13,9 +14,7 @@ var (
 	password         string
 	instance         string
 	connectionParams string
-	Column           bool
 	Output           string
-	SQLParams        []interface{}
 	rootCmd          = &cobra.Command{
 		Use:   "dbTool",
 		Short: "dbTool is a free CLI for databases connection",
@@ -30,21 +29,42 @@ func init() {
 	for _, v := range dbList {
 		CreateDBCmd(v)
 	}
-	rootCmd.PersistentFlags().StringVar(&host, "host", "127.0.0.1", "")
-	rootCmd.PersistentFlags().StringVar(&port, "port", "", "")
-	rootCmd.PersistentFlags().StringVar(&username, "username", "root", "")
-	rootCmd.PersistentFlags().StringVar(&password, "password", "", "")
-	rootCmd.PersistentFlags().StringVar(&instance, "instance", "test", "")
-	rootCmd.PersistentFlags().BoolVar(&Column, "show-column-name", true, "")
-	rootCmd.PersistentFlags().StringVar(&Output, "output", "standard", "")
+	rootCmd.PersistentFlags().StringVar(&host, "host", "127.0.0.1", "Host address")
+	rootCmd.PersistentFlags().StringVar(&port, "port", "", "Listen port")
+	rootCmd.PersistentFlags().StringVar(&username, "username", "", "Username")
+	rootCmd.PersistentFlags().StringVar(&password, "password", "", "Password")
+	rootCmd.PersistentFlags().StringVar(&instance, "instance", "", `In mysql and postgres it called 'database'
+In dm it called 'schema'`)
+	rootCmd.PersistentFlags().StringVar(&Output, "output-type", "normal", "normal|json|csv")
 }
 
 func Execute() {
-	rootCmd.Execute()
-	if sqlParams != "" {
-		args := strings.Split(sqlParams, ",")
-		for _, v := range args {
-			SQLParams = append(SQLParams, v)
+	err := rootCmd.Execute()
+	myformat.Error(err, "CLI Init Failed")
+	if RDBType != "" {
+		count := strings.Count(RDBSql, "?")
+		length := len(sqlParams)
+		if RDBSql != "" && count == 0 && length == 0 {
+			return
+		} else if RDBSql != "" && count != 0 {
+			relationDB(count, length)
+		} else {
+			myformat.Error(errors.New(""), "Please use --sql to specify SQL, use 'dbTool "+RDBType+" -h' for more information")
+		}
+	}
+}
+
+func relationDB(count, length int) {
+	if length%count != 0 {
+		myformat.Error(errors.New(""), "Please check your total parameters, it must be divided by count of SQL's '?'")
+	} else {
+		for i := 0; i < length/count; i++ {
+			var cache []interface{}
+			for j := 0; j < count; j++ {
+				cache = append(cache, sqlParams[j])
+			}
+			SQLParamsSliced = append(SQLParamsSliced, cache)
+			sqlParams = sqlParams[count:]
 		}
 	}
 }

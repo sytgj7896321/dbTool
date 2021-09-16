@@ -10,11 +10,11 @@ import (
 func main() {
 	cmd.Execute()
 	if cmd.RDBType != "" {
-		relationDB()
+		relationDB(cmd.SQLParamsSliced)
 	}
 }
 
-func relationDB() {
+func relationDB(sqlParamsSliced [][]interface{}) {
 	db := &relation.MyDB{}
 	err := db.OpenDB()
 	myformat.Error(err, "Fail to open database connection")
@@ -24,5 +24,11 @@ func relationDB() {
 	}(db.DB)
 	err = db.DB.Ping()
 	myformat.Error(err, "Fail to connect database")
-	db.Do(cmd.RDBModify, cmd.RDBQuery, cmd.RDBType)
+	if sqlParamsSliced != nil {
+		for _, v := range sqlParamsSliced {
+			db.Do(cmd.RDBSql, cmd.Output, v)
+		}
+	} else {
+		db.Do(cmd.RDBSql, cmd.Output, nil)
+	}
 }

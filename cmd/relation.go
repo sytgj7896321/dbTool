@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	dbList        = []string{"mysql", "postgres", "dm"}
-	RDBType       string
-	RDBConnection string
-	RDBModify     string
-	RDBQuery      string
-	sqlParams     string
+	dbList          = []string{"mysql", "postgres", "dm"}
+	RDBType         string
+	RDBConnection   string
+	RDBSql          string
+	sqlParams       []string
+	SQLParamsSliced [][]interface{}
 )
 
 func CreateDBCmd(dbType string) {
@@ -25,12 +25,11 @@ func CreateDBCmd(dbType string) {
 			RDBType = dbType
 		},
 	}
-	dbCmd.Flags().StringVar(&RDBModify, "modify", "", `A query without returning any rows, including DDL, DML and DCL
-like --modify "INSERT INTO users (uid, sha) VALUES (uuid(), sha1(uuid()));"`)
-	dbCmd.Flags().StringVar(&RDBQuery, "query", "", `A query return at least one row, including DQL
-like --query "SELECT uid, sha FROM users WHERE id > 100;"`)
-	dbCmd.Flags().StringVar(&connectionParams, "connectionParams", "", "Param1=Value1&...&ParamN=ValueN")
-	dbCmd.Flags().StringVar(&sqlParams, "sql-params", "", "")
+	dbCmd.Flags().StringVar(&RDBSql, "sql", "", "Support DDL, DML, DCL(Transaction has been auto enable) and DQL")
+	dbCmd.Flags().StringVar(&connectionParams, "connection-params", "", "Param1=Value1&...&ParamN=ValueN")
+	dbCmd.Flags().StringSliceVar(&sqlParams, "sql-params", sqlParams, `Use with SQL's parameters '?'
+--sql-params="v1,v2" --sql-params="v3,v4" ...
+or --sql-params="v1,v2,v3,v4,..."`)
 	rootCmd.AddCommand(dbCmd)
 }
 
@@ -42,9 +41,18 @@ func Join(dbType string) string {
 		}
 		return username + ":" + password + "@tcp(" + host + ":" + port + ")/" + instance + "?" + connectionParams
 	case "postgres":
+		if port == "" {
+			port = "5432"
+		}
 		return "postgres://" + username + ":" + password + "@" + host + ":" + port + "/" + instance + "?" + connectionParams
 	case "dm":
-		return "dm://" + username + ":" + password + "@" + host + ":" + port + "/" + instance + "?" + connectionParams
+		if port == "" {
+			port = "5236"
+		}
+		if instance == "" {
+			instance = "SYSDBA"
+		}
+		return "dm://" + username + ":" + password + "@" + host + ":" + port + "?" + "schema=" + instance + "&" + connectionParams
 	default:
 		return ""
 	}
