@@ -70,31 +70,39 @@ func (m *MyDB) Query(sqlStr string, args ...interface{}) {
 	start := time.Now()
 	stmt, err := m.DB.Prepare(sqlStr)
 	myformat.Error(err, "Please Check your SQL")
+
 	rows, err := stmt.Query(args...)
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
 		myformat.Error(err, "Close Query Failed")
 	}(rows)
 	myformat.Error(err, "Query SQL Failed")
-	cols, err := rows.Columns()
-	myformat.Error(err, "Read Columns Failed")
-	scans := make([]interface{}, len(cols))
-	colsToBeScan := make([]string, len(cols))
-	for i := range cols {
-		colsToBeScan[i] = cols[i]
-		scans[i] = &colsToBeScan[i]
+
+	types, _ := rows.ColumnTypes()
+	longestCol, asterisk := FindLongestColAndMakeAsterisk(types)
+
+	scans := make([]interface{}, len(types))
+	cols := make([]interface{}, len(types))
+	for i := range types {
+		cols[i] = types[i].Name()
+		scans[i] = &cols[i]
 	}
-	i := 0
+
+	rowCount := 0
 	for rows.Next() {
 		err := rows.Scan(scans...)
 		myformat.Error(err, "Scan Row Data Failed")
-		i++
-		fmt.Printf("*************************** %d. row ***************************\n", i)
-		for col, v := range colsToBeScan {
-			fmt.Printf("%27s:%-27s\n", cols[col], v)
+		rowCount++
+		fmt.Printf("%s %d. row %s\n", asterisk, rowCount, asterisk)
+		for i, v := range cols {
+			if v != nil {
+				fmt.Printf("%*s:%v\n", longestCol, types[i].Name(), v)
+			} else {
+				fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), "null")
+			}
 		}
 	}
-	fmt.Printf("%d rows in set (%v)\n", i, time.Since(start))
+	fmt.Printf("%d rows in set (%v)\n", rowCount, time.Since(start))
 }
 
 func (m *MyDB) QueryJson(sqlString string, args ...interface{}) {
@@ -132,4 +140,22 @@ func (m *MyDB) QueryJson(sqlString string, args ...interface{}) {
 	jsonData, err := json.Marshal(tableData)
 	myformat.Error(err, "json")
 	fmt.Println(string(jsonData))
+}
+
+func FindLongestColAndMakeAsterisk(types []*sql.ColumnType) (int, string) {
+	var longestCol int
+	for _, v := range types {
+		if len(v.Name()) >= longestCol {
+			longestCol = len(v.Name())
+		}
+	}
+	asterisk := make([]byte, longestCol)
+	for range asterisk {
+		asterisk = append(asterisk, '*')
+	}
+	return longestCol, string(asterisk)
+}
+
+func DataOutput(colName string, columns map[string]string, data interface{}) {
+
 }
