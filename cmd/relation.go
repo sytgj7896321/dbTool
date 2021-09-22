@@ -27,9 +27,10 @@ func CreateDBCmd(dbType string) {
 	}
 	dbCmd.Flags().StringVar(&RDBSql, "sql", "", "Support DDL, DML, DCL(Transaction has been auto enable) and DQL")
 	dbCmd.Flags().StringVar(&connectionParams, "connection-params", "", "Param1=Value1&...&ParamN=ValueN")
-	dbCmd.Flags().StringSliceVar(&sqlParams, "sql-params", sqlParams, `Use with SQL's parameters '?'
---sql-params="v1,v2" --sql-params="v3,v4" ...
-or --sql-params="v1,v2,v3,v4,..."`)
+	dbCmd.Flags().StringSliceVar(&sqlParams, "sql-params", sqlParams, `Use SQL with '?'
+e.g. You have two parameters need to be pass, it could be used like
+--sql "SQL with '?'" --sql-params="v1,v2" --sql-params="v3,v4" ...--sql-params="vN,vN+1"
+or --sql "SQL with '?'" --sql-params="v1,v2,v3,v4,...,vN,vN+1"`)
 	rootCmd.AddCommand(dbCmd)
 }
 

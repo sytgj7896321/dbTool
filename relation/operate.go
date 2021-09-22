@@ -162,53 +162,61 @@ func DataOutput(types []*sql.ColumnType, i, longestCol int, v interface{}) {
 	case "BIGINT":
 		switch v.(type) {
 		case []uint8:
-			fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+			fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 		case int64:
-			fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+			fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v.(int64))
 		}
 	case "BINARY":
-		fmt.Printf("")
+		fmt.Printf("%*s:Not support Binary type\n", longestCol, types[i].Name())
 	case "BIT":
-		fmt.Printf("")
+		fmt.Printf("%*s:", longestCol, types[i].Name())
+		for _, u := range v.([]uint8) {
+			if u == 0 {
+				continue
+			} else {
+				fmt.Printf("%b", u)
+			}
+		}
+		fmt.Printf("\n")
 	case "BLOB":
-		fmt.Printf("")
+		fmt.Printf("%*s:Not support Blob type\n", longestCol, types[i].Name())
 	case "CHAR":
-		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "DATE":
-		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "DATETIME":
-		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "DECIMAL":
-		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "DOUBLE":
-		fmt.Printf("")
+		fmt.Printf("%*s:%g\n", longestCol, types[i].Name(), v.(float64))
 	case "FLOAT":
-		fmt.Printf("")
+		fmt.Printf("%*s:%g\n", longestCol, types[i].Name(), v.(float32))
 	case "GEOMETRY":
-		fmt.Printf("")
+		fmt.Printf("%*s:Not support Geometry type\n", longestCol, types[i].Name())
 	case "INT":
-		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v.(int64))
 	case "JSON":
-		fmt.Printf("")
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "MEDIUMINT":
-		fmt.Printf("")
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v.(int64))
 	case "SMALLINT":
-		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v.(int64))
 	case "TEXT":
-		fmt.Printf("")
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "TIME":
-		fmt.Printf("")
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "TIMESTAMP":
-		fmt.Printf("")
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "TINYINT":
-		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v.(int64))
 	case "VARBINARY":
-		fmt.Printf("")
+		fmt.Printf("%*s:Not support Varbinary type\n", longestCol, types[i].Name())
 	case "VARCHAR":
-		fmt.Printf("")
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v.([]uint8))
 	case "YEAR":
-		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v.(int64))
 	default:
-		fmt.Printf("Unknown Data Type")
+		fmt.Printf("%*s:Unknown Data Type\n", longestCol, types[i].Name())
 	}
 }
