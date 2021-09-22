@@ -96,9 +96,10 @@ func (m *MyDB) Query(sqlStr string, args ...interface{}) {
 		fmt.Printf("%s %d. row %s\n", asterisk, rowCount, asterisk)
 		for i, v := range cols {
 			if v != nil {
-				fmt.Printf("%*s:%v\n", longestCol, types[i].Name(), v)
+				DataOutput(types, i, longestCol, v)
 			} else {
-				fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), "null")
+				//fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), "null")
+				fmt.Printf("")
 			}
 		}
 	}
@@ -156,6 +157,58 @@ func FindLongestColAndMakeAsterisk(types []*sql.ColumnType) (int, string) {
 	return longestCol, string(asterisk)
 }
 
-func DataOutput(colName string, columns map[string]string, data interface{}) {
-
+func DataOutput(types []*sql.ColumnType, i, longestCol int, v interface{}) {
+	switch types[i].DatabaseTypeName() {
+	case "BIGINT":
+		switch v.(type) {
+		case []uint8:
+			fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+		case int64:
+			fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+		}
+	case "BINARY":
+		fmt.Printf("")
+	case "BIT":
+		fmt.Printf("")
+	case "BLOB":
+		fmt.Printf("")
+	case "CHAR":
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+	case "DATE":
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+	case "DATETIME":
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+	case "DECIMAL":
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
+	case "DOUBLE":
+		fmt.Printf("")
+	case "FLOAT":
+		fmt.Printf("")
+	case "GEOMETRY":
+		fmt.Printf("")
+	case "INT":
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+	case "JSON":
+		fmt.Printf("")
+	case "MEDIUMINT":
+		fmt.Printf("")
+	case "SMALLINT":
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+	case "TEXT":
+		fmt.Printf("")
+	case "TIME":
+		fmt.Printf("")
+	case "TIMESTAMP":
+		fmt.Printf("")
+	case "TINYINT":
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+	case "VARBINARY":
+		fmt.Printf("")
+	case "VARCHAR":
+		fmt.Printf("")
+	case "YEAR":
+		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+	default:
+		fmt.Printf("Unknown Data Type")
+	}
 }
