@@ -171,11 +171,7 @@ func DataOutput(types []*sql.ColumnType, i, longestCol int, v interface{}) {
 	case "BIT":
 		fmt.Printf("%*s:", longestCol, types[i].Name())
 		for _, u := range v.([]uint8) {
-			if u == 0 {
-				continue
-			} else {
-				fmt.Printf("%b", u)
-			}
+			fmt.Printf("%b", u)
 		}
 		fmt.Printf("\n")
 	case "BLOB":
