@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/imroc/biu v0.0.0-20170329141542-0376ce6761c0
 	github.com/lib/pq v1.10.3
 	github.com/spf13/cobra v1.2.1
 	github.com/sytgj7896321/dm v0.0.0-20210830073834-9cc714c86a21

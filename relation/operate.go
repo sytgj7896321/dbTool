@@ -5,6 +5,7 @@ import (
 	"dbTool/myformat"
 	"encoding/json"
 	"fmt"
+	"github.com/imroc/biu"
 	"os"
 	"strings"
 	"time"
@@ -98,8 +99,7 @@ func (m *MyDB) Query(sqlStr string, args ...interface{}) {
 			if v != nil {
 				DataOutput(types, i, longestCol, v)
 			} else {
-				//fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), "null")
-				fmt.Printf("")
+				fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), "null")
 			}
 		}
 	}
@@ -151,8 +151,8 @@ func FindLongestColAndMakeAsterisk(types []*sql.ColumnType) (int, string) {
 		}
 	}
 	asterisk := make([]byte, longestCol)
-	for range asterisk {
-		asterisk = append(asterisk, '*')
+	for i := range asterisk {
+		asterisk[i] = '*'
 	}
 	return longestCol, string(asterisk)
 }
@@ -169,11 +169,21 @@ func DataOutput(types []*sql.ColumnType, i, longestCol int, v interface{}) {
 	case "BINARY":
 		fmt.Printf("%*s:Not support Binary type\n", longestCol, types[i].Name())
 	case "BIT":
+		cache1 := v.([]uint8)
 		fmt.Printf("%*s:", longestCol, types[i].Name())
 		for _, u := range v.([]uint8) {
-			fmt.Printf("%b", u)
+			if u == 0 {
+				cache1 = cache1[1:]
+			} else {
+				break
+			}
 		}
-		fmt.Printf("\n")
+		cache2 := ""
+		for _, u := range cache1 {
+			cache2 = cache2 + biu.ToBinaryString(u)
+		}
+		cache2 = strings.TrimLeft(cache2, "0")
+		fmt.Printf("%s\n", cache2)
 	case "BLOB":
 		fmt.Printf("%*s:Not support Blob type\n", longestCol, types[i].Name())
 	case "CHAR":
