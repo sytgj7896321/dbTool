@@ -3,7 +3,6 @@ package relation
 import (
 	"database/sql"
 	"dbTool/myformat"
-	"encoding/json"
 	"fmt"
 	"github.com/imroc/biu"
 	"os"
@@ -104,43 +103,6 @@ func (m *MyDB) Query(sqlStr string, args ...interface{}) {
 		}
 	}
 	fmt.Printf("%d rows in set (%v)\n", rowCount, time.Since(start))
-}
-
-func (m *MyDB) QueryJson(sqlString string, args ...interface{}) {
-	stmt, err := m.DB.Prepare(sqlString)
-	myformat.Error(err, "json")
-	defer stmt.Close()
-	rows, err := stmt.Query()
-	myformat.Error(err, "json")
-	defer rows.Close()
-	columns, err := rows.Columns()
-	myformat.Error(err, "json")
-	count := len(columns)
-	tableData := make([]map[string]interface{}, 0)
-	values := make([]interface{}, count)
-	valuePtrs := make([]interface{}, count)
-	for rows.Next() {
-		for i := 0; i < count; i++ {
-			valuePtrs[i] = &values[i]
-		}
-		rows.Scan(valuePtrs...)
-		entry := make(map[string]interface{})
-		for i, col := range columns {
-			var v interface{}
-			val := values[i]
-			b, ok := val.([]byte)
-			if ok {
-				v = string(b)
-			} else {
-				v = val
-			}
-			entry[col] = v
-		}
-		tableData = append(tableData, entry)
-	}
-	jsonData, err := json.Marshal(tableData)
-	myformat.Error(err, "json")
-	fmt.Println(string(jsonData))
 }
 
 func FindLongestColAndMakeAsterisk(types []*sql.ColumnType) (int, string) {
