@@ -184,6 +184,8 @@ func DataOutput(types []*sql.ColumnType, i, longestCol int, v interface{}) {
 		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
 	case "YEAR":
 		fmt.Printf("%*s:%d\n", longestCol, types[i].Name(), v)
+	case "UUID":
+		fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), v)
 	default:
 		fmt.Printf("%*s:Unknown Data Type\n", longestCol, types[i].Name())
 	}

@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"github.com/spf13/cobra"
 	_ "github.com/sytgj7896321/dm"
+	"strings"
 )
 
 var (
@@ -40,12 +42,13 @@ func Join(dbType string) string {
 		if port == "" {
 			port = "3306"
 		}
-		return username + ":" + password + "@tcp(" + host + ":" + port + ")/" + instance + "?" + connectionParams
+		return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s", username, password, host, port, instance, connectionParams)
 	case "postgres":
 		if port == "" {
 			port = "5432"
 		}
-		return "postgres://" + username + ":" + password + "@" + host + ":" + port + "/" + instance + "?" + connectionParams
+		connectionParams = strings.Replace(connectionParams, "&", " ", -1)
+		return fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable %s", host, port, instance, username, password, connectionParams)
 	case "dm":
 		if port == "" {
 			port = "5236"
@@ -53,7 +56,7 @@ func Join(dbType string) string {
 		if instance == "" {
 			instance = "SYSDBA"
 		}
-		return "dm://" + username + ":" + password + "@" + host + ":" + port + "?" + "schema=" + instance + "&" + connectionParams
+		return fmt.Sprintf("dm://%s:%s@%s:%s?schema=%s&%s", username, password, host, port, instance, connectionParams)
 	default:
 		return ""
 	}
