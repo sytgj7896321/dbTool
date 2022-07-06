@@ -99,7 +99,6 @@ func (m *MyDB) Query(sqlStr, rdbType string, args ...interface{}) {
 		fmt.Printf("%s %d. row %s\n", asterisk, rowCount, asterisk)
 		for i, v := range cols {
 			if v != nil {
-				fmt.Println(types[i].DatabaseTypeName())
 				DataOutput(types, i, longestCol, rdbType, v)
 			} else {
 				fmt.Printf("%*s:%s\n", longestCol, types[i].Name(), "NULL")
