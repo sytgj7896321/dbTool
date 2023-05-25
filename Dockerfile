@@ -1,4 +1,4 @@
-FROM golang:1.17 as builder
+FROM golang:1.20 as builder
 
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
@@ -12,9 +12,9 @@ COPY ./ ./
 
 RUN go build -o dbtool ./
 
-FROM alpine:3.16.0
+FROM alpine:3.17
 
-LABEL version="1.0.2" maintainer=yi-tao.shi@hp.com
+LABEL version="1.1.0" maintainer=yi-tao.shi@hp.com
 
 COPY --from=builder /build/dbtool /
 
