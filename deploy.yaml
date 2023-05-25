@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: db-test
-          image: sytgj7896321/dbtool:1.0.3
+          image: sytgj7896321/dbtool:1.1.0
           args:
             - 'mysql'
             - '--host'
